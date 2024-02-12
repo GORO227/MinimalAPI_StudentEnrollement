@@ -4,6 +4,8 @@ using StudentEnrollement.Data;
 using StudentEnrollement.Data.DatabaseContext;
 using StudentEnrollement.Api.Endpoints;
 using StudentEnrollement.Api.Configurations;
+using StudentEnrollement.Data.Contracts;
+using StudentEnrollement.Data.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +21,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddAutoMapper(typeof(MapperConfig));
+
+builder.Services.AddScoped<ICourseRepository, CourseRepository>();
+builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
 
 builder.Services.AddCors(options =>
 {

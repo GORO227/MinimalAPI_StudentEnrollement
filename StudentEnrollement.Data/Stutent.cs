@@ -7,5 +7,6 @@
         public DateTime DateOfBirth { get; set; }
         public string IdNumber { get; set; }
         public string Picture { get; set; }
+        public List<Enrollement> Enrollements { get; set; } = new List<Enrollement>();
     }
 }
