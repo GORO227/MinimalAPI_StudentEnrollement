@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 using StudentEnrollement.Data.Configurations;
 using System;
 using System.Collections.Generic;
@@ -21,8 +23,28 @@ namespace StudentEnrollement.Data.DatabaseContext
         {
             base.OnModelCreating(builder);
             builder.ApplyConfiguration(new CourseConfiguration());
-            builder.ApplyConfiguration(new UserRoleConfiguration());
-            
+            builder.ApplyConfiguration(new UserRoleConfiguration());           
+        }
+        
+    }
+    public class StudentEnrollementDbContextFactory : IDesignTimeDbContextFactory<StudentEnrollementDbContext>
+    {
+        public StudentEnrollementDbContext CreateDbContext(string[] args)
+        {
+            //Get environment
+            //string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
+            //Build config
+            IConfiguration config = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .Build();
+
+            //Get connection string
+            var optionsBuilder = new DbContextOptionsBuilder<StudentEnrollementDbContext>();
+            var connectionString = config.GetConnectionString("StudentEnrollementDbConnection");
+            optionsBuilder.UseSqlServer(connectionString);
+            return new StudentEnrollementDbContext(optionsBuilder.Options);
         }
     }
 }
