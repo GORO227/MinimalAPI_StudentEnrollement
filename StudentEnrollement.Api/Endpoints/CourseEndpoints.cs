@@ -4,6 +4,7 @@ using StudentEnrollement.Data;
 using StudentEnrollement.Data.DatabaseContext;
 using StudentEnrollement.Api.DTOs.Course;
 using AutoMapper;
+using StudentEnrollement.Data.Contracts;
 namespace StudentEnrollement.Api.Endpoints;
 
 public static class CourseEndpoints
@@ -12,9 +13,9 @@ public static class CourseEndpoints
     {
         var group = routes.MapGroup("/api/Course").WithTags(nameof(Course));
 
-        group.MapGet("/", async (StudentEnrollementDbContext db, IMapper mapper) =>
+        group.MapGet("/", async (ICourseRepository repo, IMapper mapper) =>
         {
-            var courses = await db.Courses.ToListAsync();
+            var courses = await repo.GetAllAsync();
             var data = mapper.Map<List<CourseDto>>(courses);
             return data;
         })
@@ -22,10 +23,9 @@ public static class CourseEndpoints
         .WithOpenApi()
         .Produces<List<CourseDto>>(StatusCodes.Status200OK);
 
-        group.MapGet("/{id}", async  (int id, StudentEnrollementDbContext db, IMapper mapper) =>
+        group.MapGet("/{id}", async  (int id, ICourseRepository repo, IMapper mapper) =>
         {
-            return await db.Courses.AsNoTracking()
-                .FirstOrDefaultAsync(model => model.Id == id)
+            return await repo.GetAsync(id)
                 is Course model
                     ? Results.Ok(mapper.Map<CourseDto>(model))
                     : Results.NotFound();
@@ -35,14 +35,26 @@ public static class CourseEndpoints
         .Produces<CourseDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
-        group.MapPut("/{id}", async  (int id, CourseDto courseDto, StudentEnrollementDbContext db, IMapper mapper) =>
+        group.MapGet("/GetStudents/{id}", async (int id, ICourseRepository repo, IMapper mapper) =>
         {
-            var foundModel = await db.Courses.FindAsync(id);
+            return await repo.GetStudentList(id)
+                is Course model
+                    ? Results.Ok(mapper.Map<CourseDetailsDto>(model))
+                    : Results.NotFound();
+        })
+       .WithName("GetCourseDetailsById")
+       .WithOpenApi()
+       .Produces<CourseDetailsDto>(StatusCodes.Status200OK)
+       .Produces(StatusCodes.Status404NotFound);
+
+        group.MapPut("/{id}", async  (int id, CourseDto courseDto, ICourseRepository repo, IMapper mapper) =>
+        {
+            var foundModel = await repo.GetAsync(id);
             if(foundModel is null)
                 return Results.NotFound();
 
             mapper.Map(courseDto, foundModel);
-            await db.SaveChangesAsync();
+            await repo.UpdateAsync(foundModel);
             return Results.NoContent();
 
             //var affected = await db.Courses
@@ -63,23 +75,19 @@ public static class CourseEndpoints
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status204NoContent);
 
-        group.MapPost("/", async (CreateCourseDto courseDto, StudentEnrollementDbContext db, IMapper mapper) =>
+        group.MapPost("/", async (CreateCourseDto courseDto, ICourseRepository repo, IMapper mapper) =>
         {
             var course = mapper.Map<Course>(courseDto);
-            db.Courses.Add(course);
-            await db.SaveChangesAsync();
+            await repo.AddAsync(course);
             return Results.Created($"/api/Course/{course.Id}",course);
         })
         .WithName("CreateCourse")
         .WithOpenApi()
         .Produces<Course>(StatusCodes.Status201Created);
 
-        group.MapDelete("/{id}", async  (int id, StudentEnrollementDbContext db) =>
+        group.MapDelete("/{id}", async  (int id, ICourseRepository repo,IMapper mapper) =>
         {
-            var affected = await db.Courses
-                .Where(model => model.Id == id)
-                .ExecuteDeleteAsync();
-            return affected == 1 ? Results.Ok() : Results.NotFound();
+            return await repo.DeleteAsync(id) ? Results.NoContent() : Results.NotFound();
         })
         .WithName("DeleteCourse")
         .WithOpenApi()

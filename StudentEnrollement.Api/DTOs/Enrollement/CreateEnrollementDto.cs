@@ -3,6 +3,6 @@
     public class CreateEnrollementDto
     {
         public int CourseId { get; set; }
-        public int StudentId { get; set; }
+        public int StutentId { get; set; }
     }
 }

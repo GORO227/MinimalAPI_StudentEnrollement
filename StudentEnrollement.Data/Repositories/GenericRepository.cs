@@ -20,12 +20,13 @@ namespace StudentEnrollement.Data.Repositories
             return entity;
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
             var entity = await GetAsync(id);
             //To Do is null or Not
             _db.Set<TEntity>().Remove(entity);
-            await _db.SaveChangesAsync();
+            //return boolean : is succuced or not
+            return await _db.SaveChangesAsync() > 0;  
         }
 
         public async Task<bool> Exists(int id)

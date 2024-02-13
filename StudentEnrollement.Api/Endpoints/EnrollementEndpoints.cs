@@ -4,6 +4,7 @@ using StudentEnrollement.Data;
 using StudentEnrollement.Data.DatabaseContext;
 using AutoMapper;
 using StudentEnrollement.Api.DTOs.Enrollement;
+using StudentEnrollement.Data.Contracts;
 namespace StudentEnrollement.Api.Endpoints;
 
 public static class EnrollementEndpoints
@@ -12,9 +13,9 @@ public static class EnrollementEndpoints
     {
         var group = routes.MapGroup("/api/Enrollement").WithTags(nameof(Enrollement));
 
-        group.MapGet("/", async (StudentEnrollementDbContext db, IMapper mapper) =>
+        group.MapGet("/", async (IEnrollmentRepository repo, IMapper mapper) =>
         {
-            var enrollments = await db.Enrollements.ToListAsync();
+            var enrollments = await repo.GetAllAsync();
             var data = mapper.Map<List<Enrollement>>(enrollments);
             return data;
         })
@@ -22,10 +23,9 @@ public static class EnrollementEndpoints
         .WithOpenApi()
         .Produces<List<EnrollementDto>>(StatusCodes.Status200OK);
 
-        group.MapGet("/{id}", async (int id, StudentEnrollementDbContext db,IMapper mapper) =>
+        group.MapGet("/{id}", async (int id, IEnrollmentRepository repo,IMapper mapper) =>
         {
-            return await db.Enrollements.AsNoTracking()
-                .FirstOrDefaultAsync(model => model.Id == id)
+            return await repo.GetAsync(id)
                 is Enrollement model
                     ? Results.Ok(mapper.Map<EnrollementDto>(model))
                     : Results.NotFound();
@@ -35,7 +35,7 @@ public static class EnrollementEndpoints
         .Produces<EnrollementDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
-        group.MapPut("/{id}", async (int id, EnrollementDto enrollementDto, StudentEnrollementDbContext db, IMapper mapper) =>
+        group.MapPut("/{id}", async (int id, EnrollementDto enrollementDto, IEnrollmentRepository repo, IMapper mapper) =>
         {
             //var affected = await db.Enrollements
             //    .Where(model => model.Id == id)
@@ -45,12 +45,12 @@ public static class EnrollementEndpoints
             //        );
             //return affected == 1 ? Results.Ok() : Results.NotFound();
 
-            var foundModel = await db.Enrollements.FindAsync(id);
+            var foundModel = await repo.GetAsync(id);
             if(foundModel is null)
                 return Results.NotFound();
 
             mapper.Map(enrollementDto, foundModel);
-            await db.SaveChangesAsync();
+            await repo.UpdateAsync(foundModel);
             return Results.NoContent();
         })
         .WithName("UpdateEnrollement")
@@ -58,27 +58,23 @@ public static class EnrollementEndpoints
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status204NoContent);
 
-        group.MapPost("/", async (CreateEnrollementDto enrollementDto, StudentEnrollementDbContext db,IMapper mapper) =>
+        group.MapPost("/", async (CreateEnrollementDto enrollementDto, IEnrollmentRepository repo,IMapper mapper) =>
         {
             var enrollement = mapper.Map<Enrollement>(enrollementDto);
-            db.Enrollements.Add(enrollement);
-            await db.SaveChangesAsync();
+            await repo.AddAsync(enrollement);
             return Results.Created($"/api/Enrollement/{enrollement.Id}", enrollement);
         })
         .WithName("CreateEnrollement")
         .WithOpenApi()
         .Produces<Enrollement>(StatusCodes.Status201Created);
 
-        group.MapDelete("/{id}", async (int id, StudentEnrollementDbContext db) =>
+        group.MapDelete("/{id}", async (int id, IEnrollmentRepository repo) =>
         {
-            var affected = await db.Enrollements
-                .Where(model => model.Id == id)
-                .ExecuteDeleteAsync();
-            return affected == 1 ? Results.Ok() : Results.NotFound();
+            return await repo.DeleteAsync(id) ? Results.NoContent() : Results.NotFound();
         })
         .WithName("DeleteEnrollement")
         .WithOpenApi()
-        .Produces<Enrollement>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status204NoContent)
         .Produces(StatusCodes.Status404NotFound);
     }
 }
