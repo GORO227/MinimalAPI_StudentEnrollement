@@ -6,6 +6,7 @@ using AutoMapper;
 using StudentEnrollement.Api.DTOs.Enrollement;
 using StudentEnrollement.Api.DTOs.Student;
 using StudentEnrollement.Data.Contracts;
+using Microsoft.AspNetCore.Authorization;
 namespace StudentEnrollement.Api.Endpoints;
 
 public static class StutentEndpoints
@@ -20,6 +21,7 @@ public static class StutentEndpoints
             var data = mapper.Map<List<StudentDto>>(students);
             return data;
         })
+        .AllowAnonymous()
         .WithName("GetAllStutents")
         .WithOpenApi()
         .Produces<List<StudentDto>>(StatusCodes.Status200OK);
@@ -48,7 +50,7 @@ public static class StutentEndpoints
         .Produces<StutentDetailsDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
-        group.MapPut("/{id}", async (int id, StudentDto stutentDto, IStudentRepository repo, IMapper mapper) =>
+        group.MapPut("/{id}", [Authorize(Roles = "Administrator")] async (int id, StudentDto stutentDto, IStudentRepository repo, IMapper mapper) =>
         {
             var foundModel = await repo.GetAsync(id);
             if (foundModel is null)
@@ -79,7 +81,7 @@ public static class StutentEndpoints
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status204NoContent);
 
-        group.MapPost("/", async (CreateStudentDto stutentDto, IStudentRepository repo, IMapper mapper) =>
+        group.MapPost("/", [Authorize(Roles = "Administrator")] async (CreateStudentDto stutentDto, IStudentRepository repo, IMapper mapper) =>
         {
             var stutent = mapper.Map<Stutent>(stutentDto);
             await repo.AddAsync(stutent);
@@ -89,7 +91,7 @@ public static class StutentEndpoints
         .WithOpenApi()
         .Produces<Stutent>(StatusCodes.Status201Created);
 
-        group.MapDelete("/{id}", async (int id, IStudentRepository repo) =>
+        group.MapDelete("/{id}", [Authorize(Roles = "Administrator")] async (int id, IStudentRepository repo) =>
         {
             return await repo.DeleteAsync(id) ? Results.NoContent() : Results.NotFound();
             //var affected = await db.Stutents

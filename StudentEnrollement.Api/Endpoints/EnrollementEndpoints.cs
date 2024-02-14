@@ -5,6 +5,7 @@ using StudentEnrollement.Data.DatabaseContext;
 using AutoMapper;
 using StudentEnrollement.Api.DTOs.Enrollement;
 using StudentEnrollement.Data.Contracts;
+using Microsoft.AspNetCore.Authorization;
 namespace StudentEnrollement.Api.Endpoints;
 
 public static class EnrollementEndpoints
@@ -68,7 +69,7 @@ public static class EnrollementEndpoints
         .WithOpenApi()
         .Produces<Enrollement>(StatusCodes.Status201Created);
 
-        group.MapDelete("/{id}", async (int id, IEnrollmentRepository repo) =>
+        group.MapDelete("/{id}", [Authorize(Roles = "Administrator")] async (int id, IEnrollmentRepository repo) =>
         {
             return await repo.DeleteAsync(id) ? Results.NoContent() : Results.NotFound();
         })

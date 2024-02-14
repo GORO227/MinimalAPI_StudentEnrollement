@@ -24,6 +24,7 @@ namespace StudentEnrollement.Api.Endpoints
                 }
                 return Results.Ok(response);       
             })
+            .AllowAnonymous()
             .WithName("Login")
             .WithOpenApi()
             .Produces(StatusCodes.Status200OK)
@@ -46,6 +47,7 @@ namespace StudentEnrollement.Api.Endpoints
    
                 return Results.BadRequest(errors);
             })
+            .AllowAnonymous()
             .WithName("Register")
             .WithOpenApi()
             .Produces(StatusCodes.Status200OK)
