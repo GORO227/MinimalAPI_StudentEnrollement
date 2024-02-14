@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StudentEnrollement.Data.DatabaseContext;
 
@@ -11,9 +12,11 @@ using StudentEnrollement.Data.DatabaseContext;
 namespace StudentEnrollement.Data.Migrations
 {
     [DbContext(typeof(StudentEnrollementDbContext))]
-    partial class StudentEnrollementDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240213112603_ExtendUserTable")]
+    partial class ExtendUserTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -47,20 +50,6 @@ namespace StudentEnrollement.Data.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = "c841b8b5-e2c0-4ed1-90ed-072a95fdbc25",
-                            Name = "Administrator",
-                            NormalizedName = "ADMINISTRATOR"
-                        },
-                        new
-                        {
-                            Id = "d34564b1-3686-4eef-8484-950c6c8a3de1",
-                            Name = "User",
-                            NormalizedName = "USER"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -148,18 +137,6 @@ namespace StudentEnrollement.Data.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            UserId = "408aa945-3d84-4421-8342-7269ec64d949",
-                            RoleId = "c841b8b5-e2c0-4ed1-90ed-072a95fdbc25"
-                        },
-                        new
-                        {
-                            UserId = "3f4631bd-f907-4409-b416-ba356312e659",
-                            RoleId = "d34564b1-3686-4eef-8484-950c6c8a3de1"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
@@ -213,28 +190,6 @@ namespace StudentEnrollement.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Courses");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedBy = "",
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Credits = 3,
-                            ModifiedBy = "",
-                            ModifiedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Title = "Minimal API Development"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedBy = "",
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Credits = 5,
-                            ModifiedBy = "",
-                            ModifiedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Title = "Ultimate API Development"
-                        });
                 });
 
             modelBuilder.Entity("StudentEnrollement.Data.Enrollement", b =>
@@ -351,44 +306,6 @@ namespace StudentEnrollement.Data.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = "408aa945-3d84-4421-8342-7269ec64d949",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "9f08b06a-3657-47db-8906-7d6c3a6e2e41",
-                            Email = "schooladmin@localhost.com",
-                            EmailConfirmed = true,
-                            FirstName = "School",
-                            LastName = "Admin",
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SCHOOLADMIN@LOCALHOST.COM",
-                            NormalizedUserName = "SCHOOLADMIN@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKSYrGExcEAUGgM8pg2xUfKu51WTazZ/kvWANIUlKcudprEwiQH0HdT9lhnBjH6zww==",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "d419ee7d-7812-47fb-96f0-5b77389af55a",
-                            TwoFactorEnabled = false,
-                            UserName = "schooladmin@localhost.com"
-                        },
-                        new
-                        {
-                            Id = "3f4631bd-f907-4409-b416-ba356312e659",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "1779a3ff-3e45-4d1c-8c6c-6fa23db69c74",
-                            Email = "schooluser@localhost.com",
-                            EmailConfirmed = true,
-                            FirstName = "School",
-                            LastName = "User",
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SCHOOLUSER@LOCALHOST.COM",
-                            NormalizedUserName = "SCHOOLUSER@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDo56dIsb2Bw2WLsh/2NKyyRFFjNnbx9SDPdGNyw2aijDRoEMEM93doK5IUgRKMhLg==",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "1c30168d-f8f2-4701-96b0-a7cb909f2144",
-                            TwoFactorEnabled = false,
-                            UserName = "schooluser@localhost.com"
-                        });
                 });
 
             modelBuilder.Entity("StudentEnrollement.Data.Stutent", b =>

@@ -6,6 +6,11 @@ using StudentEnrollement.Api.Endpoints;
 using StudentEnrollement.Api.Configurations;
 using StudentEnrollement.Data.Contracts;
 using StudentEnrollement.Data.Repositories;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using StudentEnrollement.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +18,28 @@ var con = builder.Configuration.GetConnectionString("StudentEnrollementDbConnect
 builder.Services.AddDbContext<StudentEnrollementDbContext>(options =>
 {
     options.UseSqlServer(con);
+});
+
+builder.Services.AddIdentityCore<SchoolUser>()
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<StudentEnrollementDbContext>();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+        ValidateAudience = true,
+        ValidAudience = builder.Configuration["JwtSettings:Audience"],
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"]))
+    };
 });
 
 // Add services to the container.
@@ -25,6 +52,7 @@ builder.Services.AddAutoMapper(typeof(MapperConfig));
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
+builder.Services.AddScoped<IAuthManager, AuthManager>();
 
 builder.Services.AddCors(options =>
 {
@@ -53,6 +81,8 @@ app.MapCourseEndpoints();
 app.MapEnrollementEndpoints();
 
 app.MapStutentEndpoints();
+
+app.MapAuthenticationEndpoints();
 
 app.Run();
 
