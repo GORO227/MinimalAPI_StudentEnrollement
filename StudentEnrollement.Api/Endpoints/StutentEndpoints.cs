@@ -7,6 +7,8 @@ using StudentEnrollement.Api.DTOs.Enrollement;
 using StudentEnrollement.Api.DTOs.Student;
 using StudentEnrollement.Data.Contracts;
 using Microsoft.AspNetCore.Authorization;
+using FluentValidation;
+using StudentEnrollement.Api.DTOs.Authentication;
 namespace StudentEnrollement.Api.Endpoints;
 
 public static class StutentEndpoints
@@ -50,8 +52,14 @@ public static class StutentEndpoints
         .Produces<StutentDetailsDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
-        group.MapPut("/{id}", [Authorize(Roles = "Administrator")] async (int id, StudentDto stutentDto, IStudentRepository repo, IMapper mapper) =>
+        group.MapPut("/{id}", [Authorize(Roles = "Administrator")] async (int id, StudentDto stutentDto, IStudentRepository repo, 
+            IMapper mapper, IValidator<StudentDto> validator) =>
         {
+            var validationResult = await validator.ValidateAsync(stutentDto);
+            if (!validationResult.IsValid)
+            {
+                return Results.BadRequest(validationResult.ToDictionary());
+            }
             var foundModel = await repo.GetAsync(id);
             if (foundModel is null)
                 return Results.NotFound();
@@ -81,8 +89,14 @@ public static class StutentEndpoints
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status204NoContent);
 
-        group.MapPost("/", [Authorize(Roles = "Administrator")] async (CreateStudentDto stutentDto, IStudentRepository repo, IMapper mapper) =>
+        group.MapPost("/", [Authorize(Roles = "Administrator")] async (CreateStudentDto stutentDto, IStudentRepository repo,
+            IMapper mapper, IValidator<CreateStudentDto> validator) =>
         {
+            var validationResult = await validator.ValidateAsync(stutentDto);
+            if (!validationResult.IsValid)
+            {
+                return Results.BadRequest(validationResult.ToDictionary());
+            }
             var stutent = mapper.Map<Stutent>(stutentDto);
             await repo.AddAsync(stutent);
             return Results.Created($"/api/Stutent/{stutent.Id}", stutent);

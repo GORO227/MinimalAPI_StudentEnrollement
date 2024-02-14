@@ -6,6 +6,9 @@ using AutoMapper;
 using StudentEnrollement.Api.DTOs.Enrollement;
 using StudentEnrollement.Data.Contracts;
 using Microsoft.AspNetCore.Authorization;
+using StudentEnrollement.Api.DTOs.Authentication;
+using System.ComponentModel.DataAnnotations;
+using FluentValidation;
 namespace StudentEnrollement.Api.Endpoints;
 
 public static class EnrollementEndpoints
@@ -36,8 +39,13 @@ public static class EnrollementEndpoints
         .Produces<EnrollementDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
-        group.MapPut("/{id}", async (int id, EnrollementDto enrollementDto, IEnrollmentRepository repo, IMapper mapper) =>
+        group.MapPut("/{id}", async (int id, EnrollementDto enrollementDto, IEnrollmentRepository repo, IMapper mapper, IValidator<EnrollementDto> validator) =>
         {
+            var validationResult = await validator.ValidateAsync(enrollementDto);
+            if (!validationResult.IsValid)
+            {
+                return Results.BadRequest(validationResult.ToDictionary());
+            }
             //var affected = await db.Enrollements
             //    .Where(model => model.Id == id)
             //    .ExecuteUpdateAsync(setters => setters
@@ -59,8 +67,13 @@ public static class EnrollementEndpoints
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status204NoContent);
 
-        group.MapPost("/", async (CreateEnrollementDto enrollementDto, IEnrollmentRepository repo,IMapper mapper) =>
+        group.MapPost("/", async (CreateEnrollementDto enrollementDto, IEnrollmentRepository repo,IMapper mapper, IValidator<CreateEnrollementDto> validator) =>
         {
+            var validationResult = await validator.ValidateAsync(enrollementDto);
+            if (!validationResult.IsValid)
+            {
+                return Results.BadRequest(validationResult.ToDictionary());
+            }
             var enrollement = mapper.Map<Enrollement>(enrollementDto);
             await repo.AddAsync(enrollement);
             return Results.Created($"/api/Enrollement/{enrollement.Id}", enrollement);

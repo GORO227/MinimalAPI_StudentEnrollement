@@ -6,6 +6,9 @@ using StudentEnrollement.Api.DTOs.Course;
 using AutoMapper;
 using StudentEnrollement.Data.Contracts;
 using Microsoft.AspNetCore.Authorization;
+using FluentValidation;
+using StudentEnrollement.Api.DTOs.Authentication;
+using System.ComponentModel.DataAnnotations;
 namespace StudentEnrollement.Api.Endpoints;
 
 public static class CourseEndpoints
@@ -50,8 +53,14 @@ public static class CourseEndpoints
        .Produces<CourseDetailsDto>(StatusCodes.Status200OK)
        .Produces(StatusCodes.Status404NotFound);
 
-        group.MapPut("/{id}", async (int id, CourseDto courseDto, ICourseRepository repo, IMapper mapper) =>
+        group.MapPut("/{id}", async (int id, CourseDto courseDto, ICourseRepository repo, IMapper mapper, IValidator<CourseDto> validator) =>
         {
+            var validationResult = await validator.ValidateAsync(courseDto);
+            if (!validationResult.IsValid)
+            {
+                return Results.BadRequest(validationResult.ToDictionary());
+            }
+
             var foundModel = await repo.GetAsync(id);
             if (foundModel is null)
                 return Results.NotFound();
@@ -78,8 +87,13 @@ public static class CourseEndpoints
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status204NoContent);
 
-        group.MapPost("/", async (CreateCourseDto courseDto, ICourseRepository repo, IMapper mapper) =>
+        group.MapPost("/", async (CreateCourseDto courseDto, ICourseRepository repo, IMapper mapper, IValidator<CreateCourseDto> validator) =>
         {
+            var validationResult = await validator.ValidateAsync(courseDto);
+            if (!validationResult.IsValid)
+            {
+                return Results.BadRequest(validationResult.ToDictionary());
+            }
             var course = mapper.Map<Course>(courseDto);
             await repo.AddAsync(course);
             return Results.Created($"/api/Course/{course.Id}", course);

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using StudentEnrollement.Api.DTOs;
 using StudentEnrollement.Api.DTOs.Authentication;
@@ -15,8 +16,22 @@ namespace StudentEnrollement.Api.Endpoints
         {
             var group = routes.MapGroup("/api/Auth").WithTags("Authentication");
 
-            group.MapPost("/login/", async (LoginDto loginDto, IAuthManager authManager) =>
+            group.MapPost("/login/", async (LoginDto loginDto, IAuthManager authManager, IValidator<LoginDto> validator) =>
             {
+                var errors = new List<ErrorResponseDto>();
+                var validationResult = await validator.ValidateAsync(loginDto);
+                if(!validationResult.IsValid)
+                {
+                    //errors = validationResult.ToDictionary().Select(p 
+                    //    => new ErrorResponseDto 
+                    //    { 
+                    //        Code = p.Key,
+                    //        Description = p.Value.ToString()
+                    //    }).ToList();
+
+                    return Results.BadRequest(validationResult.ToDictionary());
+                }
+
                 var response = await authManager.Login(loginDto);
                 if(response is null)
                 {
@@ -30,8 +45,13 @@ namespace StudentEnrollement.Api.Endpoints
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPost("/register/", async (RegisterDto registerDto, IAuthManager authManager) =>
+            group.MapPost("/register/", async (RegisterDto registerDto, IAuthManager authManager, IValidator<RegisterDto> validator) =>
             {
+                var validationResult = await validator.ValidateAsync(registerDto);
+                if (!validationResult.IsValid)
+                {
+                    return Results.BadRequest(validationResult.ToDictionary());
+                }
                 var response = await authManager.Register(registerDto);
                 if(!response.Any())
                     return Results.Ok();
