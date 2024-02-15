@@ -4,9 +4,11 @@ using Microsoft.AspNetCore.Identity;
 using StudentEnrollement.Api.DTOs;
 using StudentEnrollement.Api.DTOs.Authentication;
 using StudentEnrollement.Api.DTOs.Course;
+using StudentEnrollement.Api.Filters;
 using StudentEnrollement.Api.Services;
 using StudentEnrollement.Data;
 using StudentEnrollement.Data.Contracts;
+using System.ComponentModel.DataAnnotations;
 
 namespace StudentEnrollement.Api.Endpoints
 {
@@ -16,22 +18,8 @@ namespace StudentEnrollement.Api.Endpoints
         {
             var group = routes.MapGroup("/api/Auth").WithTags("Authentication");
 
-            group.MapPost("/login/", async (LoginDto loginDto, IAuthManager authManager, IValidator<LoginDto> validator) =>
+            group.MapPost("/login/", async (LoginDto loginDto, IAuthManager authManager) =>
             {
-                var errors = new List<ErrorResponseDto>();
-                var validationResult = await validator.ValidateAsync(loginDto);
-                if(!validationResult.IsValid)
-                {
-                    //errors = validationResult.ToDictionary().Select(p 
-                    //    => new ErrorResponseDto 
-                    //    { 
-                    //        Code = p.Key,
-                    //        Description = p.Value.ToString()
-                    //    }).ToList();
-
-                    return Results.BadRequest(validationResult.ToDictionary());
-                }
-
                 var response = await authManager.Login(loginDto);
                 if(response is null)
                 {
@@ -39,19 +27,15 @@ namespace StudentEnrollement.Api.Endpoints
                 }
                 return Results.Ok(response);       
             })
+            .AddEndpointFilter<ValidationFilter<LoginDto>>()
             .AllowAnonymous()
             .WithName("Login")
             .WithOpenApi()
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPost("/register/", async (RegisterDto registerDto, IAuthManager authManager, IValidator<RegisterDto> validator) =>
+            group.MapPost("/register/", async (RegisterDto registerDto, IAuthManager authManager) =>
             {
-                var validationResult = await validator.ValidateAsync(registerDto);
-                if (!validationResult.IsValid)
-                {
-                    return Results.BadRequest(validationResult.ToDictionary());
-                }
                 var response = await authManager.Register(registerDto);
                 if(!response.Any())
                     return Results.Ok();
@@ -67,6 +51,7 @@ namespace StudentEnrollement.Api.Endpoints
    
                 return Results.BadRequest(errors);
             })
+            .AddEndpointFilter<ValidationFilter<RegisterDto>>()
             .AllowAnonymous()
             .WithName("Register")
             .WithOpenApi()

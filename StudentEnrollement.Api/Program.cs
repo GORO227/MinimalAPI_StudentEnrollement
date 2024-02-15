@@ -58,20 +58,23 @@ builder.Services.AddAuthorization(options =>
     .Build();
 });
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddLogging();
+
+//builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+//Client Archi registretion Fluent Validation
+builder.Services.AddValidatorsFromAssemblies(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
 builder.Services.AddScoped<IAuthManager, AuthManager>();
+builder.Services.AddScoped<IFileUpload, FileUpload>();
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy 
         => policy.AllowAnyHeader().AllowAnyOrigin().AllowAnyMethod()); 
 });
-
-//builder.Services.AddValidatorsFromAssemblyContaining<Program>();
-//Client Archi registretion Fluent Validation
-builder.Services.AddValidatorsFromAssemblies(AppDomain.CurrentDomain.GetAssemblies());
 
 var app = builder.Build();
 
@@ -82,17 +85,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseAuthentication();
-app.UseAuthorization();
-
 app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
 
-app.MapGet("/courses",async (StudentEnrollementDbContext context) =>{
-    return await context.Courses.ToListAsync();
-});
-
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapCourseEndpoints();
 

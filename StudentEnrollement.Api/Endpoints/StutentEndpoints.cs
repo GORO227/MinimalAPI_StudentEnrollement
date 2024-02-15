@@ -9,6 +9,8 @@ using StudentEnrollement.Data.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using FluentValidation;
 using StudentEnrollement.Api.DTOs.Authentication;
+using StudentEnrollement.Api.Services;
+using StudentEnrollement.Api.Filters;
 namespace StudentEnrollement.Api.Endpoints;
 
 public static class StutentEndpoints
@@ -53,7 +55,7 @@ public static class StutentEndpoints
         .Produces(StatusCodes.Status404NotFound);
 
         group.MapPut("/{id}", [Authorize(Roles = "Administrator")] async (int id, StudentDto stutentDto, IStudentRepository repo, 
-            IMapper mapper, IValidator<StudentDto> validator) =>
+            IMapper mapper, IValidator<StudentDto> validator, IFileUpload fileUpload) =>
         {
             var validationResult = await validator.ValidateAsync(stutentDto);
             if (!validationResult.IsValid)
@@ -65,6 +67,10 @@ public static class StutentEndpoints
                 return Results.NotFound();
 
             mapper.Map(stutentDto, foundModel);
+
+            if(stutentDto.ProfilePicture != null)
+                foundModel.Picture = fileUpload.UploadStudentFile(stutentDto.ProfilePicture, stutentDto.OriginalFileName);
+           
             await repo.UpdateAsync(foundModel);
             return Results.NoContent();
 
@@ -90,17 +96,17 @@ public static class StutentEndpoints
         .Produces(StatusCodes.Status204NoContent);
 
         group.MapPost("/", [Authorize(Roles = "Administrator")] async (CreateStudentDto stutentDto, IStudentRepository repo,
-            IMapper mapper, IValidator<CreateStudentDto> validator) =>
+            IMapper mapper, IFileUpload fileUpload) =>
         {
-            var validationResult = await validator.ValidateAsync(stutentDto);
-            if (!validationResult.IsValid)
-            {
-                return Results.BadRequest(validationResult.ToDictionary());
-            }
             var stutent = mapper.Map<Stutent>(stutentDto);
+
+            stutent.Picture = fileUpload.UploadStudentFile(stutentDto.ProfilePicture, stutentDto.OriginalFileName);
+           
             await repo.AddAsync(stutent);
             return Results.Created($"/api/Stutent/{stutent.Id}", stutent);
         })
+        .AddEndpointFilter<ValidationFilter<CreateStudentDto>>()
+        .AddEndpointFilter<LoggingFilter>()
         .WithName("CreateStutent")
         .WithOpenApi()
         .Produces<Stutent>(StatusCodes.Status201Created);

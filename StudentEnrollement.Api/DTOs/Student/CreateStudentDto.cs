@@ -8,7 +8,8 @@ namespace StudentEnrollement.Api.DTOs.Student
         public string LastName { get; set; }
         public DateTime DateOfBirth { get; set; }
         public string IdNumber { get; set; }
-        public string Picture { get; set; }
+        public Byte[] ProfilePicture { get; set; }
+        public string OriginalFileName { get; set; }
     }
 
     public class CreateStudentDtoValidator : AbstractValidator<CreateStudentDto>
@@ -23,6 +24,10 @@ namespace StudentEnrollement.Api.DTOs.Student
                 .NotEmpty();
             RuleFor(x => x.IdNumber)
                 .NotEmpty();
+
+            RuleFor(x => x.OriginalFileName)
+                .NotNull()
+                .When(x => x.ProfilePicture != null);
         }
     }
 }
